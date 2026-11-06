@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import es.uvigo.dagss.pedidos.entidades.Almacen;
 
-public interface AlmacenDAO extends JpaRepository<Almacen, Long>{
+public interface AlmacenDao extends JpaRepository<Almacen, Long>{
 	List<Almacen> findByNombreContaining(String nombre);
 	List<Almacen> findByDireccionLocalidad(String localidad);
 

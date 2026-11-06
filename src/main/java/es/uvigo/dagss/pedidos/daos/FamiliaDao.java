@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import es.uvigo.dagss.pedidos.entidades.Familia;
 
-public interface FamiliaDAO extends JpaRepository<Familia, Long> {
+public interface FamiliaDao extends JpaRepository<Familia, Long> {
 	public List<Familia> findByNombre(String nombre);
     
 	@Query("SELECT f FROM Familia f WHERE f.descripcion LIKE %:patron%")

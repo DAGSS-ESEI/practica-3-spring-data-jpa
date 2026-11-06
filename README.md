@@ -131,7 +131,7 @@ La anotación `@SpringBootApplication` engloba a las anotaciones:
 ### Entidades (las mismas que en la práctica 2 sobre persistencia)
 Las entidades son las mismas que en la [práctica 2 sobre persistencia](https://github.com/DAGSS-ESEI/practica-2-persistencia).
 
-### Interfaces de los repositorios `FamiliaDAO`, `ArticuloDAO`, `AlmacenDAO`, `ArticuloAlmacenDAO`, `ClienteDAO` y `PedidoDAO`
+### Interfaces de los repositorios `FamiliaDao`, `ArticuloDao`, `AlmacenDao`, `ArticuloAlmacenDao`, `ClienteDao` y `PedidoDao`
 
 Los interfaces están en [`src/main/java/es/uvigo/dagss/pedidos/daos`](src/main/java/es/uvigo/dagss/pedidos/daos).
 
@@ -144,7 +144,7 @@ Al heredar de `JpaRepository<T,K>` no es necesario marcar los interfaces con `@R
 
 Respecto a los _Repositorios_/DAOs creados en el ejemplo:
 
-- El _Repositorio_/DAO `PedidoDAO` aprovecha que la relación 1:N entre `Pedido` y `LineaPedido` está anotada con `cascade = CascadeType.ALL` para realizar la gestión de las entidades `LineaPedido` junto con la entidad `Pedido` a la que pertenece cada línea de pedido, no siendo necesario contar con un `LineaPedidoDAO` propio.
+- El _Repositorio_/DAO `PedidoDao` aprovecha que la relación 1:N entre `Pedido` y `LineaPedido` está anotada con `cascade = CascadeType.ALL` para realizar la gestión de las entidades `LineaPedido` junto con la entidad `Pedido` a la que pertenece cada línea de pedido, no siendo necesario contar con un `LineaPedidoDao` propio.
   - Es decir, al guardar con el método `save()` un nuevo `Pedido` con una serie de `LineaPedido` vinculadas, se insertará en la BD una tupla en la tabla `Pedido` y las _n_ tuplas correspondientes en la tabla `LineaPedido`.
   - Al modificar un `Pedido` existente con el método `save()` del DAO, se actualizarán las respectivas `LineaPedido` que hayan sido modificadas, eliminando aquellas que ya no estén explícitamente vinculadas a esa entidad `Pedido` que se modifica (como resultado del `orphanRemoval=true` en la anotación `@OneToMany` de `Pedido`).
   - Al eliminar un `Pedido` existente con el método `delete()` del DAO, se eliminarán las respectivas `LineaPedido`.
@@ -160,12 +160,14 @@ spring.datasource.url=jdbc:mysql://localhost:3307/pruebas_dagss
 spring.datasource.username=dagss
 spring.datasource.password=dagss
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=create-drop
 spring.jpa.properties.hibernate.show_sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 # detalles en https://www.baeldung.com/hibernate-field-naming-spring-boot
 ```
+
+**Nota:** con `create-drop`, Hibernate crea el esquema al arrancar y lo elimina al parar la aplicación; los datos no se conservan entre ejecuciones.
 
 A partir de esta configuración de conexión con la BD, la _autoconfiguración_ de SpringBoot como consecuencia de incluir el _starter_ `spring-boot-starter-data-jpa` en el `pom.xml`, creará e inicializará los correspondientes _Datasource_, _EntityManagerFactory_, _PersistenceUnit_ y el gestor de Transacciones.
 
@@ -181,22 +183,22 @@ package es.uvigo.dagss.pedidos;
 @SpringBootApplication
 public class PedidosSpringApplication implements CommandLineRunner {
 	@Autowired
-	FamiliaDAO familiaDAO;
+	FamiliaDao familiaDao;
 
 	@Autowired
-	ArticuloDAO articuloDAO;
+	ArticuloDao articuloDao;
 
 	@Autowired
-	ClienteDAO clienteDAO;
+	ClienteDao clienteDao;
 
 	@Autowired
-	PedidoDAO pedidoDAO;
+	PedidoDao pedidoDao;
 
 	@Autowired
-	AlmacenDAO almacenDAO;
+	AlmacenDao almacenDao;
 
 	@Autowired
-	ArticuloAlmacenDAO articuloAlmacenDAO;
+	ArticuloAlmacenDao articuloAlmacenDao;
 	
 	public static void main(String[] args) {
 		SpringApplication.run(PedidosSpringApplication.class, args);
@@ -248,9 +250,9 @@ mvnw.cmd spring-boot:run    # en MS Windows
 
 ### 1. **Query methods** de JPA
 
-1. Abre las clases `ArticuloDAO` y `FamiliaDAO` y convierte los métodos `findByPatronDescripcion` en **query methods** de JPA.
-2. Abre la clase `ClienteDAO` y añade un **query method** para listar los clientes que pertenencen a un código postal dado.
-3. Abre la clase `ArticuloDAO` y añade un **query method** para listar los artículos cuyo precio esté comprendido entre dos valores dados.
+1. Abre las clases `ArticuloDao` y `FamiliaDao` y convierte los métodos `findByPatronDescripcion` en **query methods** de JPA.
+2. Abre la clase `ClienteDao` y añade un **query method** para listar los clientes que pertenencen a un código postal dado.
+3. Abre la clase `ArticuloDao` y añade un **query method** para listar los artículos cuyo precio esté comprendido entre dos valores dados.
 
 ### 2. Spring Data REST (generador de APIs REST para _repositorios_ Spring DATA)
 

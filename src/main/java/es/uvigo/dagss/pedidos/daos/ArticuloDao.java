@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import es.uvigo.dagss.pedidos.entidades.Articulo;
 
-public interface ArticuloDAO extends JpaRepository<Articulo, Long>{
+public interface ArticuloDao extends JpaRepository<Articulo, Long>{
 	public List<Articulo> findByFamiliaId(Long id);
 	public List<Articulo> findByNombre(String nombre);
     
