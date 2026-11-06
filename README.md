@@ -1,5 +1,5 @@
 # Ejemplo Proyecto Spring 
-> DAGSS 2025-2026, semana 3
+> DAGSS 2026-2027, semana 3
 
 - Ejemplo de creación de proyectos Spring Boot 
 - Ejemplo de definición de repositorios Spring Data JPA
@@ -7,26 +7,29 @@
 ## Previo
 ### Requisitos previos
 
-- Servidor de BD MySQL
-- Maven (versión > 3.5.x)
+- Servidor de BD MySQL 8.0.46 (o compatible)
+- Java 25 (OpenJDK 25 u Oracle JDK 25)
+- Maven 3.9.8
 - (opcional) GIT
 - (opcional) IDE Java (VSCode, Eclipse, Netbeans, IntelliJ)
 - (recomendable) extensión *Spring Boot Extension Pack* en VSCode.
 
-**Nota:** En los equipos de laboratorio, puede ser conveniente establecer la variable de entorno JAVA_HOME, para que el comando `mvn` (Maven) compile y ejecute los proyectos siempre con el mismo JDK. 
+**Nota:** En los equipos de laboratorio puede ser conveniente establecer la variable de entorno `JAVA_HOME`, para que `mvn` compile y ejecute siempre con el mismo JDK.
 
 ```sh 
-export JAVA_HOME=/usr/lib/jvm/jdk-20 
+export JAVA_HOME=/usr/lib/jvm/jdk-25
 
 export PATH=$JAVA_HOME/bin:$PATH 
 ```
+
+*Ajustad la ruta a la instalación de Java 25 disponible en vuestro equipo.*
 
 ### Crear BD para los ejemplos  (si no se ha hecho antes)
 
 * Crear BD "pruebas_dagss" en MySQL 
 
 ```
-mysql -u root -p    [pedirá la contraseña de MySQL]
+mysql -u root -p    #[pedirá la contraseña de MySQL (probar con "admin")]
 
 mysql> create database pruebas_dagss;
 mysql> create user dagss@localhost identified by "dagss";
@@ -40,7 +43,35 @@ mysql> set @@global.time_zone = '+00:00';
 mysql> set @@session.time_zone = '+00:00';
 ```
 
-## CREAR PROYECTO SPRING BOOT
+#### Con servidor de BD en contenedor Docker
+
+Para no instalar MySQL localmente puede arrancarse un contenedor Docker (los datos se guardarán en un volumen gestionado por Docker llamado `dagss_dbdata`):
+
+```bash
+docker run -d --rm --name dagss-mysql \
+  -e MYSQL_DATABASE=pruebas_dagss \
+  -e MYSQL_USER=dagss \
+  -e MYSQL_PASSWORD=dagss \
+  -e MYSQL_ROOT_PASSWORD=rootpass \
+  -p 3307:3306 \
+  -v dagss_dbdata:/var/lib/mysql \
+  mysql:8.0.46
+```
+
+Y probar:
+
+```bash
+docker exec -it dagss-mysql mysql -udagss -pdagss --default-character-set=utf8mb4 pruebas_dagss -e "SHOW TABLES;"
+```
+
+En este caso, configurar en `application.properties`:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3307/pruebas_dagss
+```
+
+## Creación de un proyecto Spring Boot
+
 Existen varias alternativas:
 - Crear un proyecto Maven vacío e incluir las dependencias de los _starters_ de Spring Boot
 - Usar Spring Tool Suite ([https://spring.io/tools](https://spring.io/tools)) y crear un nuevo proyecto _Spring Starter project_ (disponible en extensión VSCode)
@@ -50,7 +81,7 @@ Existen varias alternativas:
 ```
 Project: Maven Project
 Language: Java
-Spring Boot version: 3.4.11
+Spring Boot version: 4.1.2
 
 Proyecto: 
    groupId: es.uvigo.dagss
@@ -69,81 +100,8 @@ Dependencias a incluir:
 	- Spring Boot DevTools (opc) # Utilidades de desarrollo en tiempo de ejecución
 ```
 
-Fichero `pom.xml` resultante
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
-	<groupId>es.uvigo.dagss</groupId>
-	<artifactId>ejemplo-spring</artifactId>
-	<version>0.1-SNAPSHOT</version>
-	<name>PedidosSpring</name>
-	<description>Ejemplo Spring y Spring DATA JPA</description>
-	<properties>
-		<java.version>17</java.version>
-	</properties>
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<image>
-						<builder>paketobuildpacks/builder-jammy-base:latest</builder>
-					</image>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
-</project>
-
-```
-El fichero `pom.xml` resultante:
-- hereda del "super"-POM base de Spring Boot (version 3.4.12)
+El fichero [`pom.xml`](pom.xml) resultante:
+- hereda del "super"-POM base de Spring Boot (version 4.1.2)
 - declara la dependencias necesarias, incluido el _starter_ `spring-boot-starter-data-jpa` que habilita Spring DATA JPA.
 - declara el _plugin_ `spring-boot-maven-plugin` que se encarga del empaquetado y ejecución de proyectos Spring Boot.
 
@@ -168,76 +126,15 @@ La anotación `@SpringBootApplication` engloba a las anotaciones:
 - `@EnableAutoConfiguration`: habilita la "autoconfiguración" del _Spring Application Context_
   - Spring Boot se encargará de recorrer el classpath buscando las dependencias (_starters_) usadas en el proyecto e inicializando con valores por defecto los elementos que necesite la aplicación (conexión con BD, control de transacciones, servidor de Servlets, etc).
 
-## CREAR REPOSITORIOS SPRING DATA JPA
+## Creación de repositorios Spring Data JPA
 
-### Copiar clases de entidades (se usarán mismas de `ejemplo-persistencia`)
-Crear el directorio para el paquete `entidades` y copiar los ficheros Java con la definición de las entidades (disponibles en [package entidades de ejemplo-persistencia-24](https://github.com/esei-si-dagss/ejemplo-persistencia-24/tree/main/src/main/java/es/uvigo/dagss/pedidos/entidades))
+### Entidades (las mismas que en la práctica 2 sobre persistencia)
+Las entidades son las mismas que en la [práctica 2 sobre persistencia](https://github.com/DAGSS-ESEI/practica-2-persistencia).
 
-```sh
-mkdir -p src/main/java/es/uvigo/dagss/pedidos/entidades
+### Interfaces de los repositorios `FamiliaDAO`, `ArticuloDAO`, `AlmacenDAO`, `ArticuloAlmacenDAO`, `ClienteDAO` y `PedidoDAO`
 
-cd src/main/java/es/uvigo/dagss/pedidos/entidades
+Los interfaces están en [`src/main/java/es/uvigo/dagss/pedidos/daos`](src/main/java/es/uvigo/dagss/pedidos/daos).
 
-wget https://raw.githubusercontent.com/esei-si-dagss/ejemplo-persistencia-24/main/src/main/java/es/uvigo/dagss/pedidos/entidades/{Articulo,Almacen,ArticuloAlmacen,ArticuloAlmacenId,Familia,Direccion,Cliente,Pedido,LineaPedido,EstadoPedido}.java
-
-pushd
-```
-
-
-### Crear (descargar) los _interfaces_ de los repositorios `FamiliaDAO`, `ArticuloDAO`, `AlmacenDAO`, `ArticuloAlmacenDAO`, `ClienteDAO` y `PedidoDAO`.
-
-#### Crear paquete `es.uvigo.dagss.pedidos.daos` y copiar código de los DAOs Spring DATA (sólo se define el interfaz).
-```sh
-mkdir -p src/main/java/es/uvigo/dagss/pedidos/daos
-cd src/main/java/es/uvigo/dagss/pedidos/daos
-
-wget https://raw.githubusercontent.com/esei-si-dagss/ejemplo-spring-24/main/src/main/java/es/uvigo/dagss/pedidos/daos/{AlmacenDAO,ArticuloAlmacenDAO,ArticuloDAO,ClienteDAO,FamiliaDAO,PedidoDAO}.java
-
-pushd
-```
-La definición de los respectivos _interfaces_ será:
-```java
-public interface AlmacenDAO extends JpaRepository<Almacen, Long>{
-	List<Almacen> findByNombreContaining(String nombre);
-	List<Almacen> findByDireccionLocalidad(String localidad);
-
-	@Query("SELECT aa.almacen FROM ArticuloAlmacen AS aa WHERE aa.articulo.id = :articuloId")
-	List<Almacen> findByArticuloId(@Param("articuloId") Long articuloId);
-}
-
-public interface ArticuloAlmacenDAO extends JpaRepository<ArticuloAlmacen, ArticuloAlmacenId>{
-	List<ArticuloAlmacen> findByAlmacenId(Long almacenId);
-	List<ArticuloAlmacen> findByArticuloId(Long articuloId);
-}
-
-public interface ArticuloDAO extends JpaRepository<Articulo, Long>{
-	public List<Articulo> findByFamiliaId(Long id);
-	public List<Articulo> findByNombre(String nombre);
-    
-	@Query("SELECT a FROM Articulo a WHERE a.descripcion LIKE %?1%")
-	public List<Articulo> findByPatronDescripcion(String patron);
-}
-
-public interface ClienteDAO extends JpaRepository<Cliente, String>{
-	List<Cliente> findByNombreContaining(String nombre);
-	List<Cliente> findByDireccionLocalidad(String localidad);
-}
-
-public interface FamiliaDAO extends JpaRepository<Familia, Long> {
-	public List<Familia> findByNombre(String nombre);
-    
-	@Query("SELECT f FROM Familia f WHERE f.descripcion LIKE %:patron%")
-	public List<Familia> findByPatronDescripcion(@Param("patron") String patron);
-}
-
-public interface PedidoDAO extends JpaRepository<Pedido, Long>{
-
-	@Query("SELECT DISTINCT p FROM Pedido AS p JOIN FETCH p.lineas WHERE p.id = :id")
-	public Pedido findPedidoConLineas(@Param("id") Long id);
-
-	public List<Pedido> findByClienteDNI(String dni);
-}
-```
 Todos los _interfaces_ heredan de `JpaRepository<T,K>`, por lo que tendrán implementaciones de los [métodos disponibles](https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html) en ese _interface_ (`save()`, `findAll()`, etc), junto con las implementaciones de los _query methods_ adicionales añadidos a cada uno de los _interfaces_.
 - Si no se aporta un `@Query` propio, Spring DATA JPA tratará de proporcionar una implementación de la consulta acorde al nombre del método (siempre que este siga las [convenciones de nombrado](https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html) de Spring DATA).
 
@@ -258,32 +155,25 @@ Respecto a los _Repositorios_/DAOs creados en el ejemplo:
 Editar fichero `src/main/resources/application.properties` y establecer los valores de conexión a la BD:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/pruebas_dagss
+# Docker (3307); para MySQL local usa jdbc:mysql://localhost:3306/pruebas_dagss
+spring.datasource.url=jdbc:mysql://localhost:3307/pruebas_dagss
 spring.datasource.username=dagss
 spring.datasource.password=dagss
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.properties.hibernate.show_sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 # detalles en https://www.baeldung.com/hibernate-field-naming-spring-boot
 ```
 
 A partir de esta configuración de conexión con la BD, la _autoconfiguración_ de SpringBoot como consecuencia de incluir el _starter_ `spring-boot-starter-data-jpa` en el `pom.xml`, creará e inicializará los correspondientes _Datasource_, _EntityManagerFactory_, _PersistenceUnit_ y el gestor de Transacciones.
 
-## EJECUCIÓN DEL PROYECTO
+## Ejecución del proyecto
 
-### Crear `main()` de prueba [Modificar `PedidosSpringApplication` en paquete `es.uvigo.dagss.pedidos`] 
+### Clase `PedidosSpringApplication`
 
-```sh
-cd src/main/java/es/uvigo/dagss/pedidos
-
-wget https://raw.githubusercontent.com/esei-si-dagss/ejemplo-spring-24/main/src/main/java/es/uvigo/dagss/pedidos/PedidosSpringApplication.java
-
-pushd
-```
-
-El nuevo contenido será:
+El contenido de `PedidosSpringApplication` es:
 ```java
 package es.uvigo.dagss.pedidos;
 ...
@@ -354,7 +244,7 @@ java -jar target/ejemplo-spring-0.1-SNAPSHOT.jar
 mvnw.cmd spring-boot:run    # en MS Windows
 ```
 
-## EXTRA: Pruebas adicionales y adelanto de REST en Spring
+## Ejercicios
 
 ### 1. **Query methods** de JPA
 
