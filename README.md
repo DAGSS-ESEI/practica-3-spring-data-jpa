@@ -293,3 +293,43 @@ mvnw.cmd spring-boot:run    # en MS Windows
    - Detalles en https://springdoc.org/
 
 2. Ejecutar de nuevo el proyecto (con `mvn spring-boot:run`) y acceder con un navegador a la URL http://localhost:8080/swagger-ui.html
+
+### 4. Soporte para almacenar valoraciones de los artículos
+
+Los clientes pueden **valorar** los artículos. Crea la entidad `Valoracion`, su repositorio correspondiente y pruébalo desde `PedidosSpringApplication`.
+
+**Entidad `Valoracion`** (paquete `entidades`):
+
+Debe representar la valoración de un artículo por parte de un cliente y guardar, al menos:
+
+- El artículo valorado (relación).
+- El cliente que la realiza (relación).
+- Una puntuación entre 1 y 5.
+- Un comentario (opcional).
+- La fecha de la valoración.
+
+Por tanto, debes relacionar `Valoracion` con `Articulo` y `Cliente` mediante relaciones unidireccionales desde `Valoracion` (no hace falta modificar las entidades existentes).
+
+**Repositorio `ValoracionDao`** (paquete `daos`):
+
+Crea un repositorio Spring Data para `Valoracion` que permita:
+
+- Obtener las valoraciones de un artículo dado.
+- Obtener las valoraciones de un artículo con una puntuación mínima (filtro opcional).
+- Obtener las valoraciones de un cliente dado.
+- Calcular la puntuación media de un artículo.
+
+**Prueba en `PedidosSpringApplication`:**
+
+- Inyecta el repositorio con `@Autowired`.
+- Crea varias `Valoracion` para los artículos y clientes que ya se crean en `crearEntidades()`.
+- Añade una consulta (por ejemplo, `consultarValoraciones()`) que muestre:
+  - Las valoraciones de un artículo.
+  - Las de un cliente.
+  - La puntuación media de un artículo.
+- Ejecuta `mvn spring-boot:run` y comprueba la salida y el SQL.
+
+**Pistas:**
+
+- Para la fecha, sigue el estilo de `Pedido`: `java.util.Date` + `@Temporal(TemporalType.DATE)`.
+- La media con `AVG(...)` devuelve `Double`; si no hay valoraciones, puede ser `null`.
